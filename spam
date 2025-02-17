@@ -1,0 +1,67 @@
+import React, { useState } from "react";
+import axios from "axios";
+
+export default function App() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [token, setToken] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [ringtone, setRingtone] = useState("");
+  const [checkNumber, setCheckNumber] = useState("");
+  const [isSpam, setIsSpam] = useState(null);
+
+  const register = async () => {
+    await axios.post("http://localhost:3000/register", { username, password });
+    alert("User registered successfully");
+  };
+
+  const login = async () => {
+    const res = await axios.post("http://localhost:3000/login", { username, password });
+    setToken(res.data.token);
+  };
+
+  const getProfile = async () => {
+    const res = await axios.get("http://localhost:3000/profile", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setProfile(res.data);
+  };
+
+  const updateRingtone = async () => {
+    await axios.post(
+      "http://localhost:3000/set-ringtone",
+      { ringtone },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    alert("Ringtone updated");
+  };
+
+  const checkSpam = async () => {
+    const res = await axios.get(`http://localhost:3000/check-spam/${checkNumber}`);
+    setIsSpam(res.data.isSpam);
+  };
+
+  return (
+    <div className="p-4 max-w-md mx-auto">
+      <h1 className="text-xl font-bold mb-4">Alert & Spam Detection</h1>
+      <input className="border p-2 w-full mb-2" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
+      <input className="border p-2 w-full mb-2" type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+      <button className="bg-blue-500 text-white p-2 w-full mb-2" onClick={register}>Register</button>
+      <button className="bg-green-500 text-white p-2 w-full mb-2" onClick={login}>Login</button>
+
+      {token && (
+        <div>
+          <button className="bg-yellow-500 text-white p-2 w-full mb-2" onClick={getProfile}>Get Profile</button>
+          {profile && <p>Username: {profile.username} | Ringtone: {profile.ringtone}</p>}
+          
+          <input className="border p-2 w-full mb-2" placeholder="New Ringtone" value={ringtone} onChange={(e) => setRingtone(e.target.value)} />
+          <button className="bg-purple-500 text-white p-2 w-full mb-2" onClick={updateRingtone}>Set Ringtone</button>
+        </div>
+      )}
+
+      <input className="border p-2 w-full mb-2" placeholder="Check Number" value={checkNumber} onChange={(e) => setCheckNumber(e.target.value)} />
+      <button className="bg-red-500 text-white p-2 w-full mb-2" onClick={checkSpam}>Check Spam</button>
+      {isSpam !== null && <p>{checkNumber} is {isSpam ? "a spam number" : "not spam"}</p>}
+    </div>
+  );
+}
